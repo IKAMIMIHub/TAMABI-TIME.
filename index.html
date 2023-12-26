@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <link rel="icon" href="img/favicon.ico" sizes="any"><!-- 32×32 -->
+<link rel="icon" href="img/favicon.ico" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- 180×180 -->
+<link rel="manifest" href="/manifest.webmanifest">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>あなたが多摩美生でいられる時間</title>
+  <style>
+    h1{
+      position: relative;
+      z-index: 2;
+      background-color: #ffffff;
+    }
+
+    #aa{
+      position: relative;
+      z-index: 2;
+      background-color: #ffffff;
+    }
+
+    body {
+      font-family: "kinuta-shin-enpitsu-it-stdn", sans-serif;
+      font-weight: 700;
+      font-style: normal;
+      text-align: center;
+      margin: 20px;
+      font-size: 1.5em;
+      height: 1500px;
+      transform: none;
+    }
+
+    canvas {
+      border: 1px solid #ffffff;
+      margin: 10px auto;
+      margin-bottom: 70px;
+      display: block;
+      background-color: #ffffff;
+    }
+
+    .remaining-time-text {
+      margin-top: 10px;
+      z-index: -999;
+    }
+
+    @media (max-width: 600px) {
+      canvas {
+        max-width: 100%;
+      }
+    }
+
+    #goToSecondPageButton {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .remaining-container {
+      position: relative;
+    }
+
+    .remaining-time-label {
+      position: absolute;
+      bottom: -25px;
+      right: -50px;
+      width: 100%;
+    }
+
+    #remainingTime,
+    #remainingSeconds {
+      display: none;
+    }
+
+    .animated-number {
+      color: #000000;
+      background-color: #ffffff;
+      display: inline-block;
+      width: 102px;
+      text-align: center;
+    }
+
+    .particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background-color: rgb(0, 0, 0);
+    border-radius: 50%; 
+    z-index: 1;
+    margin-top: 2000px;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 1.5s ease-out;
+      z-index: 10;
+    }
+
+    #totalSeconds{
+      position: relative;
+      margin-top: 630px;
+      z-index: 999;
+    }
+
+    .scrolling-div {
+      border-radius: 10px; 
+      position: fixed;
+      top: 0;
+      left: 0;
+      margin-left: 100px;
+      bottom: auto;
+      width: 10px;
+      background: linear-gradient(rgb(0, 0, 0), rgb(218, 218, 218)); 
+      height: 100px;
+      transition: height 0.5s ease-out; 
+    }
+
+    .scrolling-div_hide{
+      position: absolute;
+      width: 100vw;
+      height: 2000px;
+      margin-top: 1950px;
+      background-color: rgb(255, 255, 255);
+      opacity: 1;
+    }
+
+    #ti{
+      margin-top: 30px;
+      text-align: center;
+      position: relative;
+      z-index: 999;
+      font-size: 22px;
+    }
+
+    #ri{
+      margin-top: 20px;
+      font-size: 20px;
+    }
+
+    #message{
+      font-size: 20px;
+    }
+
+    #sub{
+      font-size: 20px;
+      margin-top: 10px;
+      background-color: #ffffff;
+    }
+
+    #border{
+      position: relative;
+      z-index: 999;
+      border-bottom:1px solid rgb(64, 64, 64);
+      margin-top: 500px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="scrolling-div"></div>
+  <div class="scrolling-div_hide"></div>
+
+
+  <h1>卒業までの残り時間描画</h1>
+
+  <label for="inputYear" id="aa">あなたは今何年生ですか？<br>
+    <div id="sub"> (1~4の数字で入力してください)</div></label>
+  <input type="number" id="inputYear" min="1" max="4">
+  <button onclick="calculateRemainingTime()">描画する</button>
+
+  <div id="timeline">
+    <div class="remaining-container">
+      <canvas id="yearCanvas" width="300" height="300"></canvas>
+      <div id="remainingYear" class="remaining-time-text remaining-time-label"></div>
+      <div id="animatedYear" class="animated-number"></div>
+    </div>
+    <div class="remaining-container">
+      <canvas id="monthCanvas" width="300" height="300"></canvas>
+      <div id="remainingMonth" class="remaining-time-text remaining-time-label"></div>
+      <div id="animatedMonth" class="animated-number"></div>
+    </div>
+    <div class="remaining-container">
+      <canvas id="dayCanvas" width="300" height="300"></canvas>
+      <div id="remainingDay" class="remaining-time-text remaining-time-label"></div>
+      <div id="animatedDay" class="animated-number"></div>
+    </div>
+    <div class="remaining-container">
+      <canvas id="hourCanvas" width="300" height="300"></canvas>
+      <div id="remainingHour" class="remaining-time-text remaining-time-label"></div>
+      <div id="animatedHour" class="animated-number"></div>
+    </div>
+  </div>
+
+  <div id="remainingTime" class="remaining-time-text"></div>
+  <div id="remainingSeconds" class="remaining-time-text"></div>
+
+
+  <div id="totalSeconds"></div>
+
+  <div id="overlay">
+    <div id="message">あなたが多摩美生でいられる時間は…</div>
+  </div>
+
+  <div id="border"></div>
+
+  <div id="ti">"あなたが多摩美生でいられる時間"<br>
+    <div id="ri">2023.12.22　Miumi Matsuo</div></div>
+
+  
+  <script>
+
+    function updateScrollingDivHeight() {
+      const scrollingDiv = document.querySelector('.scrolling-div');
+      const scrollHeight = Math.max(window.scrollY, 0); 
+      if(scrollHeight < 800){
+      scrollingDiv.style.height = `${scrollHeight}px`; 
+      }
+    }
+
+    window.addEventListener('scroll', updateScrollingDivHeight);
+
+    updateScrollingDivHeight();
+
+    document.addEventListener("DOMContentLoaded", function() {
+      var overlay = document.getElementById("overlay");
+
+      setTimeout(function() {
+        overlay.style.opacity = 0;
+      }, 2000);
+
+      setTimeout(function() {
+        overlay.style.zIndex=-999;
+      }, 3000);
+    });
+
+  (function(d) {
+    var config = {
+      kitId: 'nok3mni',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+
+    function calculateRemainingTime() {
+      const inputYear = document.getElementById('inputYear').value;
+      const graduationYear = 4;
+
+      if (inputYear >= 1 && inputYear <= 4) {
+        const currentDate = new Date();
+        const graduationDate = new Date(currentDate.getFullYear() + (graduationYear - inputYear + 1), 2, 31); 
+
+        const timeDifference = graduationDate - currentDate;
+
+        const totalHours = timeDifference / (1000 * 60 * 60);
+        const totalSeconds = totalHours * 60 * 60;
+        const years = totalHours / (24 * 365);
+        const months = totalHours / (24 * 30);
+        const days = totalHours / 24;
+        const hours = totalHours;
+
+        if (inputYear < 4) {
+          drawLines('yearCanvas', years - 1, 100, 2, 'black', 15);
+          document.getElementById('remainingYear').innerHTML = `<p class="remaining-time-text">${Math.floor(years)}　年</p>`;
+          animateRandomNumber('animatedYear', 5, () => {
+            document.getElementById('remainingYear').innerHTML = `<p class="remaining-time-text">${Math.floor(years)}　年</p>`;
+          });
+        } else {
+          drawLines('yearCanvas', years - 1, 170, 2, 'white', 15);
+          document.getElementById('remainingYear').innerHTML = `<p class="remaining-time-text">${Math.floor(years)}　年</p>`;
+          animateRandomNumber('animatedYear', 5, () => {
+            document.getElementById('remainingYear').innerHTML = `<p class="remaining-time-text">${Math.floor(years)}　年</p>`;
+          });
+        }
+        drawLines('monthCanvas', months, 13, 2, 'black', 15);
+        document.getElementById('remainingMonth').innerHTML = `<p class="remaining-time-text">${Math.floor(months)} ヶ月</p>`;
+        animateRandomNumber('animatedMonth', 5, () => {
+          document.getElementById('remainingMonth').innerHTML = `<p class="remaining-time-text">${Math.floor(months)} ヶ月</p>`;
+        });
+        drawPoints('dayCanvas', days, 3, 'black');
+        document.getElementById('remainingDay').innerHTML = `<p class="remaining-time-text">${Math.floor(days)}　日</p>`;
+        animateRandomNumber('animatedDay', 5, () => {
+          document.getElementById('remainingDay').innerHTML = `<p class="remaining-time-text">${Math.floor(days)}　日</p>`;
+        });
+        drawPoints('hourCanvas', hours, 1, 'black');
+        document.getElementById('remainingHour').innerHTML = `<p class="remaining-time-text">${Math.floor(hours)}　時間</p>`;
+        animateRandomNumber('animatedHour', 5, () => {
+          document.getElementById('remainingHour').innerHTML = `<p class="remaining-time-text">${Math.floor(hours)}　時間</p>`;
+        });
+
+        document.getElementById('remainingTime').innerHTML = `
+          <p class="remaining-time-text">${Math.floor(years)}年</p>
+          <p class="remaining-time-text">${Math.floor(months)}ヶ月</p>
+          <p class="remaining-time-text">${Math.floor(days)}日</p>
+          <p class="remaining-time-text">${Math.floor(hours)}時間</p>
+        `;
+
+        document.getElementById('remainingSeconds').innerHTML = `<p class="remaining-time-text">${Math.floor(totalSeconds)}秒</p>`;
+
+        const urlParams = new URLSearchParams(window.location.search);
+      let totalSecondsA = parseInt(urlParams.get('totalSeconds'));
+
+      const totalSecondsElement = document.getElementById('totalSeconds');
+
+      totalSecondsElement.textContent = `${Math.floor(totalSeconds)}秒`;
+      
+
+
+      } else {
+        alert('有効な学年を入力してください（1から4まで）');
+      }
+    }
+
+    function drawLines(canvasId, count, length, lineWidth, color, angle) {
+      const canvas = document.getElementById(canvasId);
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * (canvas.width - lineWidth);
+        const y = Math.random() * (canvas.height - lineWidth);
+        drawNoisyRotatedLine(context, x, y, length, lineWidth, color, angle);
+      }
+    }
+
+    function drawNoisyRotatedLine(context, x, y, length, lineWidth, color, angle) {
+      context.save();
+      context.translate(x, y);
+      context.rotate(angle * Math.PI / 180);
+      context.beginPath();
+
+      const noise = 3;
+      const halfLength = length / 2;
+      const startX = -halfLength + Math.random() * noise;
+      const endX = halfLength + Math.random() * noise;
+
+      context.moveTo(startX, 0);
+      context.lineTo(endX, 0);
+
+      context.lineWidth = lineWidth;
+      context.strokeStyle = color;
+      context.stroke();
+      context.restore();
+    }
+
+    function drawPoints(canvasId, count, radius, color) {
+      const canvas = document.getElementById(canvasId);
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * (canvas.width - radius * 2);
+        const y = Math.random() * (canvas.height - radius * 2);
+        drawNoisyPoint(context, x, y, radius, color);
+      }
+    }
+
+    function drawNoisyPoint(context, x, y, radius, color) {
+      context.beginPath();
+
+      const noise = 3;
+      const offsetX = Math.random() * noise;
+      const offsetY = Math.random() * noise;
+
+      context.arc(x + radius + offsetX, y + radius + offsetY, radius, 0, 2 * Math.PI, false);
+      context.fillStyle = color;
+      context.fill();
+    }
+
+    function animateRandomNumber(elementId, digits, onAnimationEnd) {
+  const element = document.getElementById(elementId);
+  let currentNumber = '';
+  let startTime;
+
+  function updateNumber(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const progress = (timestamp - startTime) / 2000;
+    if (progress < 1) {
+      currentNumber = generateRandomNumber(digits);
+      element.textContent = currentNumber;
+      requestAnimationFrame(updateNumber);
+    } else {
+      element.textContent = ''; 
+      onAnimationEnd();
+    }
+  }
+
+  requestAnimationFrame(updateNumber);
+}
+
+    function generateRandomNumber(digits) {
+      let randomNumber = '';
+      for (let i = 0; i < digits; i++) {
+        randomNumber += Math.floor(Math.random() * 10);
+      }
+      return randomNumber;
+    }
+
+    function goToSecondPage() {
+      const yearsElement = document.querySelector('.remaining-time-text:nth-child(1)');
+      const monthsElement = document.querySelector('.remaining-time-text:nth-child(2)');
+      const daysElement = document.querySelector('.remaining-time-text:nth-child(3)');
+      const hoursElement = document.querySelector('.remaining-time-text:nth-child(4)');
+
+      const totalSeconds =
+        parseInt(yearsElement.textContent) * 365 * 24 * 60 * 60 +
+        parseInt(monthsElement.textContent) * 30 * 24 * 60 * 60 +
+        parseInt(daysElement.textContent) * 24 * 60 * 60 +
+        parseInt(hoursElement.textContent) * 60 * 60;
+
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+  const totalSecondsElement = document.getElementById('totalSecondsInput'); 
+
+  totalSecondsElement.addEventListener('input', function () {
+    let inputSeconds = parseFloat(totalSecondsElement.value);
+    if (!isNaN(inputSeconds)) {
+      updateTotalSeconds(inputSeconds);
+    }
+  });
+
+  function updateTotalSeconds(seconds) {
+    totalSecondsElement.textContent = `${Math.floor(totalSeconds)}秒`;
+
+if (totalSeconds >= 0) {
+  setTimeout(updateTotalSeconds, 1000);
+}
+  }
+});
+
+
+    /*document.addEventListener('DOMContentLoaded', function () {
+      
+      if (totalSeconds >= 0) {
+    function updateTotalSeconds() {
+      totalSeconds -= 1;
+
+      if (totalSeconds < 0) {
+        totalSeconds = 0;
+        clearInterval(intervalId);
+      }
+      totalSecondsElement.textContent = `${Math.floor(totalSeconds)}秒`;
+    }
+    const intervalId = setInterval(updateTotalSeconds, 1000);
+  }
+
+      updateTotalSeconds();
+    });*/
+
+
+const totalSecondsElement = document.getElementById('totalSeconds');
+
+const timer = setInterval(function() {
+    if (totalSeconds <= 0) {
+        clearInterval(timer);
+        return;
+    }
+
+    totalSecondsElement.textContent = parseInt(totalSecondsElement.textContent) - 1 + '秒';
+
+}, 1000);
+    
+
+    
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const particleCount = 2500; 
+  
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement("div");
+      particle.className = "particle";
+      
+      const randomLeft = Math.random() * 100;
+      const randomTop = Math.random() * 50;
+  
+      particle.style.left = (randomLeft+0) + "%";
+      particle.style.top = (randomTop+0) + "%";
+  
+      document.body.appendChild(particle);
+    }
+  
+    function animateParticle(particle) {
+      const startPosition = particle.getBoundingClientRect().top;
+      const endPosition = 1000-5;
+  
+      let startTime = null;
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = elapsed / (10 * 1000); 
+        const newPosition = startPosition + progress * (endPosition - startPosition);
+        particle.style.top = newPosition + "px";
+  
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        }
+      }
+  
+      requestAnimationFrame(step);
+    }
+  
+    function startParticleAnimations() {
+      const particles = document.querySelectorAll(".particle");
+  
+      function dropRandomParticle() {
+        const randomIndex = Math.floor(Math.random() * particles.length);
+        animateParticle(particles[randomIndex]);
+      }
+  
+      setInterval(dropRandomParticle, 1000);
+      dropRandomParticle();
+    }
+  
+    startParticleAnimations();
+  });
+
+  </script>
+
+</body>
+</html>
